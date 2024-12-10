@@ -1,0 +1,12 @@
+{
+  "EUNL.DE": {
+    "shortName": "Core MSCI World",
+    "longName": "iShares Core MSCI World UCITS ETF USD (Acc)",
+    "holdings": 3.780975
+  },
+  "AUM5.DE": {
+    "shortName": "S&P 500 EUR",
+    "longName": "Amundi Index Solutions - Amundi S&P 500 UCITS ETF",
+    "holdings": 0.951065
+  }
+}
