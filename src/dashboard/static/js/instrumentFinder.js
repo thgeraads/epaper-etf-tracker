@@ -22,7 +22,7 @@ document.getElementById('findInstrumentBtn').addEventListener('click', async () 
 
         // Populate fields with response data
         document.getElementById('instrumentId').value = data.etf.instrumentId;
-        document.getElementById('shortname').value = data.etf.shortname;
+        document.getElementById('shortname').value = data.etf.displayname;
         document.getElementById('name').value = data.etf.displayname;
 
         // Close the modal
