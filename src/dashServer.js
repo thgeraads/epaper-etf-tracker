@@ -5,13 +5,13 @@ const fs = require('fs');
 const app = express();
 const port = 3000;
 
-const etfPath = path.resolve(__dirname, '..', 'config', '/etfs.json');
+const etfPath = path.join(__dirname, '..', 'config', '/etfs.json');
 
 
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '/index.html'));
+    res.sendFile(path.join(__dirname, '/index.html'));
 });
 
 app.get('/etfs', (req, res) => {
