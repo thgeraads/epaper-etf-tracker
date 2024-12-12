@@ -1,8 +1,12 @@
+// This file is meant to be used with a 128x250 BWR display with a size of 2.13 inches.
+// Other sizes may not work as expected.
+// This file contains the ETF list to be used in combination with a chart-only display.
+
 const {createCanvas} = require("canvas");
 
 function generateChartImage(data, etfInfo, antiAliasing = true) {
-    const canvasWidth = 400;
-    const canvasHeight = 300;
+    const canvasWidth = 128;
+    const canvasHeight = 250;
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext("2d");
 
@@ -61,188 +65,109 @@ function generateChartImage(data, etfInfo, antiAliasing = true) {
     }
 
 
-    const graphWidth = 256;
-    const graphHeight = 236;
-    const graphX = canvasWidth - graphWidth;
-    const graphY = canvasHeight - graphHeight - 20;
-
     const times = Object.keys(data);
     const holdings = times.map((time) => data[time].holdings);
     const latestTime = times[times.length - 1];
 
     const maxHoldings = Math.max(...holdings);
     const minHoldings = Math.min(...holdings);
-    const scaleX = graphWidth / (holdings.length - 1);
-    const scaleY = graphHeight / (maxHoldings - minHoldings);
 
     ctx.fillStyle = _colors.background;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Draw the top bar with rounded corners
-    const barHeight = 25; // Slightly less tall
-    const barWidth = canvasWidth - 20; // Slightly less wide
-    const barRadius = 12.5;
-    const barY = 5; // Move down a few pixels
-    const barX = (canvasWidth - barWidth) / 2; // Center the bar
-    ctx.fillStyle = _colors.topBar;
-    ctx.beginPath();
-    ctx.moveTo(barX + barRadius, barY);
-    ctx.lineTo(barX + barWidth - barRadius, barY);
-    ctx.quadraticCurveTo(barX + barWidth, barY, barX + barWidth, barY + barRadius);
-    ctx.lineTo(barX + barWidth, barY + barHeight - barRadius);
-    ctx.quadraticCurveTo(barX + barWidth, barY + barHeight, barX + barWidth - barRadius, barY + barHeight);
-    ctx.lineTo(barX + barRadius, barY + barHeight);
-    ctx.quadraticCurveTo(barX, barY + barHeight, barX, barY + barHeight - barRadius);
-    ctx.lineTo(barX, barY + barRadius);
-    ctx.quadraticCurveTo(barX, barY, barX + barRadius, barY);
-    ctx.closePath();
-    ctx.fill();
 
-    // Draw the time text in the top bar
-    ctx.fillStyle = _colors.topBarText;
-    ctx.font = antiAliasing ? "16px Arial" : "16px Monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    if (_marketOpen == true) {
-        ctx.fillText("last updated at " + latestTime, (canvasWidth / 4) * 3, barY + barHeight / 2);
-    }
-    else{
-        ctx.fillText("Market Closed", (canvasWidth / 4) * 3, barY + barHeight / 2);
-    }
-
-    ctx.fillStyle = _colors.symbolText;
-    ctx.font = antiAliasing ? "14px Arial" : "14px Monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    let yOffset = 40; // Adjusted to avoid overlap with the top bar
-
-    let totalProfit = 0;
-    let totalCost = 0;
-
-    for (const symbol of Object.keys(etfInfo)) {
-        const shortName = etfInfo[symbol].shortName;
-        const latestPrice = data[latestTime]?.[symbol]?.toFixed(2) ?? "N/A";
+    function drawEtfList(etfs, data) {
         ctx.fillStyle = _colors.symbolText;
-        ctx.fillText(`${shortName}:`, 10, yOffset);
-        yOffset += 15
+        // ctx.antialias = "gray";
+        let y = 15;
+        for (const etf in etfs) {
+            const latestPrice = data[latestTime]?.[etf]?.toFixed(2) ?? "N/A";
 
-        // calculate the price difference from the start of the day
-        const startPrice = data[times[0]][symbol];
-        const priceDifference = (latestPrice - startPrice).toFixed(2);
-        const priceDifferencePercentage = ((priceDifference / startPrice) * 100).toFixed(2);
-        const priceDifferenceColor = priceDifference > 0 ? _colors.gainText : _colors.lossText;
-        // text with arrows and percentage
-        // const priceDifferenceText = priceDifference > 0 ? ▲ €${priceDifference} : ▼ €${Math.abs(priceDifference)} ;
-        let priceDifferenceText = priceDifference > 0 ? `▲ €${priceDifference}` :`▼ €${Math.abs(priceDifference)}` ;
-        priceDifferenceText += priceDifference > 0 ?  ` (${priceDifferencePercentage}%)` :  ` (${Math.abs(priceDifferencePercentage)}%)`;
-        ctx.fillStyle = priceDifferenceColor;
+            ctx.font = "15px Arial";
+            ctx.fillStyle = _colors.symbolText;
+            ctx.fillText(etfInfo[etf].shortName, 5, y);
+            y += 15;
 
-        ctx.fillText(`€${latestPrice}`, 10, yOffset);
-        yOffset += 15;
-        ctx.fillText(priceDifferenceText, 10, yOffset);
-        yOffset += 30;
+            ctx.font = "14px Arial";
+            ctx.fillText(`€${latestPrice}`, 5, y);
+            y += 15;
 
-        // Calculate total profit for this ETF
-        const boughtAt = etfInfo[symbol].boughtAt;
-        const holdings = etfInfo[symbol].holdings;
-        const profit = (latestPrice - boughtAt) * holdings;
-        totalProfit += profit;
-        totalCost += boughtAt * holdings;
+            const firstPrice = data[times[0]][etf];
+            const lastPrice = data[latestTime][etf];
+            const change = lastPrice - firstPrice;
+            const changeInHoldings = change * etfs[etf].holdings;
+            const changePercentage = (change / firstPrice) * 100;
+
+            console.log(change, changeInHoldings, changePercentage);
+
+            let changeText = change > 0 ? `▲€${change.toFixed(2)} (${changePercentage.toFixed(2)}%)` : `▼ €${Math.abs(change).toFixed(2)} (${changePercentage.toFixed(2)}%)`;
+            ctx.fillStyle = change > 0 ? _colors.gainText : _colors.lossText;
+            ctx.fillText(changeText, 5, y);
+
+            y += 15;
+            changeText = changeInHoldings > 0 ? `Total: +€${changeInHoldings.toFixed(2)}` : `Total: -€${Math.abs(changeInHoldings).toFixed(2)}`;
+            ctx.fillText(changeText, 5, y);
+
+            y += 30;
+        }
     }
 
-    ctx.strokeStyle = _colors.graph;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    let minPoint = null;
-    let maxPoint = null;
-    for (let i = 0; i < holdings.length; i++) {
-        const x = graphX + scaleX * i;
-        const y = graphY + graphHeight - (holdings[i] - minHoldings) * scaleY;
+    // draw the total block on the bottom
+    function drawTotalBlock() {
+        ctx.fillStyle = _colors.totalBlock;
+        ctx.fillRect(0, canvasHeight - 50, canvasWidth, 50);
 
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        const lastHoldings = holdings[holdings.length - 1];
+        const firstHoldings = holdings[0];
+        const totalDifference = lastHoldings - firstHoldings;
+        const totalChangePercentage = ((totalDifference / firstHoldings) * 100).toFixed(2);
 
-        if (holdings[i] === maxHoldings) maxPoint = {x, y, value: maxHoldings.toFixed(2), time: times[i]};
-        if (holdings[i] === minHoldings) minPoint = {x, y, value: minHoldings.toFixed(2), time: times[i]};
+        const totalHoldings = lastHoldings.toFixed(2);
+        const totalChangeText = totalDifference > 0
+            ? `▲€${totalDifference.toFixed(2)} (${totalChangePercentage}%)`
+            : `▼ €${Math.abs(totalDifference).toFixed(2)} (${totalChangePercentage}%)`;
+
+        let y = canvasHeight - 35;
+        ctx.font = "15px Arial";
+        ctx.fillStyle = _colors.totalText;
+        ctx.fillText(`Total: €${totalHoldings}`, 5, y);
+        y += 15;
+
+        ctx.font = "14px Arial";
+        ctx.fillStyle = totalDifference > 0 ? _colors.totalGainText : _colors.totalLossText;
+        ctx.fillText(totalChangeText, 5, y);
+
+        // Calculate total profit/loss since buying in
+        let totalProfit = 0;
+        for (const etfId in etfInfo) {
+            const etf = etfInfo[etfId];
+            const currentPrice = data[latestTime][etfId]; // Current price of the ETF
+            const initialInvestment = etf.boughtAt * etf.holdings;
+            const currentValue = currentPrice * etf.holdings;
+            totalProfit += currentValue - initialInvestment;
+        }
+
+        // Background for profit/loss text
+        ctx.fillStyle = "blue";
+        const profitTextY = y + 15;
+        const textHeight = 15; // Height of the text
+        ctx.fillRect(0, profitTextY - textHeight, canvasWidth, textHeight + 5); // Slight padding
+
+        // Draw profit/loss text
+        const profitText = totalProfit > 0
+            ? `Profit: +€${totalProfit.toFixed(2)}`
+            : `Loss: -€${Math.abs(totalProfit).toFixed(2)}`;
+
+        ctx.fillStyle = _colors.totalText; // Use the total text color on red background
+        ctx.fillText(profitText, 5, profitTextY);
     }
-    ctx.stroke();
-
-    ctx.fillStyle = _colors.graphText;
-    ctx.font = antiAliasing ? "12px Arial" : "12px Monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    if (minPoint) {
-        ctx.fillText(`€${minPoint.value}`, minPoint.x, minPoint.y + 10);
-    }
-    ctx.textBaseline = "top";
-    if (maxPoint) {
-        ctx.fillText(`€${maxPoint.value}`, maxPoint.x, maxPoint.y - 10);
-    }
-
-    ctx.fillStyle = _colors.topBarText;
-    ctx.font = antiAliasing ? "16px Arial" : "16px Monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`▲ €${maxPoint.value} | ▼ €${minPoint.value}`, barX + 5, barY + (barHeight / 2));
-
-    ctx.fillStyle = _colors.graphText;
-    ctx.font = antiAliasing ? "12px Arial" : "12px Monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    const labelInterval = Math.ceil(holdings.length / 6);
-    for (let i = 0; i < times.length; i += labelInterval) {
-        const x = graphX + scaleX * i;
-        if (minPoint && Math.abs(x - minPoint.x) < 20) continue;
-        ctx.fillText(times[i], x, graphY + graphHeight + 5);
-    }
-
-
-    // add total in the bottom left
-    const total = holdings[holdings.length - 1].toFixed(2);
-    ctx.fillStyle = _colors.totalBlock;
-    ctx.fillRect(0, canvasHeight - 60, 120, 60);
-
-    ctx.fillStyle = _colors.totalText;
-    ctx.font = antiAliasing ? "17px Arial" : "12px Monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`Total: €${total}`, 5, canvasHeight - 50);
-
-    ctx.font = antiAliasing ? "12px Arial" : "12px Monospace";
-    // add total gains for the day
-    const startTotal = holdings[0].toFixed(2);
-    const totalDifference = (total - startTotal).toFixed(2);
-    const totalDifferencePercentage = ((totalDifference / startTotal) * 100).toFixed(2);
-    const totalDifferenceColor = totalDifference > 0 ? _colors.totalGainText : _colors.totalLossText;
-    let totalDifferenceText = totalDifference > 0 ?`▲ €${totalDifference}` :`▼ €${Math.abs(totalDifference)}`;
-    totalDifferenceText += totalDifference > 0 ?  ` (${totalDifferencePercentage}%)` : ` (${Math.abs(totalDifferencePercentage)}%)`;
-    ctx.fillStyle = totalDifferenceColor;
-    ctx.fillText(totalDifferenceText, 5, canvasHeight - 30);
-
-    // Add total profit since buying with a separate red background
-    const profitPercentage = ((totalProfit / totalCost) * 100).toFixed(2);
-    const profitColor = totalProfit > 0 ? "white" : "blue"; // Text will be white regardless of profit or loss
-    const profitBackgroundColor = totalProfit > 0 ? "blue" : "black"; // Green for profit, red for loss
-
-    // Define rectangle dimensions
-    const profitRectX = 0;
-    const profitRectY = canvasHeight - 20;
-    const profitRectWidth = 120;
-    const profitRectHeight = 20;
-
-    // Draw background rectangle
-    ctx.fillStyle = profitBackgroundColor;
-    ctx.fillRect(profitRectX, profitRectY, profitRectWidth, profitRectHeight);
-
-    // Draw profit text
-    ctx.fillStyle = profitColor;
-    ctx.font = antiAliasing ? "14px Arial" : "12px Monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`▲ €${totalProfit.toFixed(2)} (${profitPercentage}%)`, profitRectX + 2, profitRectY + profitRectHeight / 2);
 
 
 
+
+    // console.log(etfInfo);
+    drawEtfList(etfInfo, data);
+    drawTotalBlock();
 
 
     const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -272,6 +197,17 @@ function generateChartImage(data, etfInfo, antiAliasing = true) {
         imageData.data[i + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
+
+    // turn the image 90 degrees
+    const rotatedCanvas = createCanvas(canvasHeight, canvasWidth);
+    const rotatedCtx = rotatedCanvas.getContext("2d");
+    rotatedCtx.translate(rotatedCanvas.width, 0);
+    rotatedCtx.rotate(Math.PI / 2);
+    rotatedCtx.drawImage(canvas, 0, 0);
+    canvas.width = canvasHeight;
+    canvas.height = canvasWidth;
+    canvas.getContext("2d").drawImage(rotatedCanvas, 0, 0);
+
 
     return canvas.toBuffer("image/png");
 }

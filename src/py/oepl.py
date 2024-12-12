@@ -2,7 +2,8 @@ import requests
 from PIL import Image
 
 # Configuration
-mac = "78F6035637807501"   # Destination MAC address
+mac = "00000618E09FB6D7"   # Newton M3
+# mac = "78F6035637807501" # HS 2.13 BWR
 dither = 0                 # Set dither to 1 if you're sending photos etc
 apip = "192.168.68.109"   # IP address of your access point
 
