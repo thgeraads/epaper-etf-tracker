@@ -2,13 +2,14 @@ const express = require('express');
 const fetch = require('node-fetch');
 const path = require('node:path');
 const fs = require('fs');
+const ejs = require('ejs');
 const app = express();
 const port = 3000;
 
 const etfPath = path.join(__dirname, '..', 'config', '/etfs.json');
 
-
 app.use(express.json());
+app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '/index.html'));
