@@ -6,23 +6,22 @@ const ejs = require('ejs');
 const app = express();
 const port = 3000;
 
-const etfPath = path.join(__dirname, '..', 'config', '/etfs.json');
+const etfPath = path.join(__dirname, '..', '..', 'config', '/etfs.json');
 
+app.use(express.static(path.join(__dirname, 'static')));
 app.use(express.json());
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '/index.html'));
+    const etfsJson = require(etfPath);
+    res.render('index', {etfs: etfsJson});
 });
 
-app.get('/etfs', (req, res) => {
-    res.sendFile(etfPath);
-});
+app.post('/findInstrument', async (req, res) => {
+    const query = req.body.query;
 
-app.post('/etfs/getByISIN', async (req, res) => {
-    const isin = req.body.isin;
-
-    await fetch(`https://www.ls-x.de/_rpc/json/.lstc/instrument/search/main?q=${isin}&localeId=2`, {
+    await fetch(`https://www.ls-x.de/_rpc/json/.lstc/instrument/search/main?q=${query}&localeId=2`, {
         "headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0",
         },
@@ -31,14 +30,14 @@ app.post('/etfs/getByISIN', async (req, res) => {
     .then(data => {
         if (data.length > 0) {
             const etf = data[0];
-            res.send({success: true, etf: etf});
+            res.json({success: true, etf: etf});
         }
         else {
-            res.send({success: false, error: 'No results found'});
+            res.json({success: false, error: 'No results found'});
         }
     })
     .catch(error => {
-        res.send({success: false, error: error});
+        res.json({success: false, error: error});
     });
 });
 
