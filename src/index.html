@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fascinating ETF Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+    <!--<h1>ETF Editor</h1>-->
+    <select id="etfs" multiple></select>
+    <br>
+
+    <button onclick="deleteSelected()" type="button">Delete selected</button>
+    <button onclick="addEtf()">Add ETF</button>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/etfs')
+    .then(response => response.json())
+    .then(data => {
+      const etfsSelect = document.getElementById('etfs');
+      for (const id in data) {
+        if (data.hasOwnProperty(id)) {
+          const etfName = data[id].shortName;
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = `${etfName} - ${id}`;
+          etfsSelect.appendChild(option);
+        }
+      }
+    });
+  });
+
+  function addEtf() {
+    const isin = prompt('Enter ETF ISIN');
+    if (!isin) return;
+
+    fetch('/etfs/getByISIN', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({isin: isin})
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.error);
+        return;
+      }
+
+      const name = prompt(`Found instrument with display name ${data.etf.displayname}\n\nEnter custom short name for the ETF? (leave empty to use the display name)`);
+      const shortName = name || data.etf.displayname;
+
+      const holdings = prompt('Enter ETF holdings (use periods)');
+      if (!holdings) return;
+      const fHoldings = parseFloat(holdings);
+      if (!fHoldings) {
+        alert('Holdings must be a number');
+        return;
+      }
+
+      fetch(`/etfs/${data.etf.instrumentId}`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              longName: data.etf.displayname,
+              shortName: shortName,
+              holdings: fHoldings
+          })
+      }).then(() => {
+        location.reload();
+      });
+    });
+  }
+
+  function deleteSelected() {
+    const etfs = [...document.getElementById('etfs').children];
+
+    etfs.forEach(etf => {
+      if (!etf.selected) return;
+      fetch(`/etfs/${etf.value}`, {
+        method: 'DELETE'
+      });
+    });
+
+    setTimeout(() => {
+      location.reload();
+    }, 300);
+  }
+</script>
+<!-- styling to center the container horizontally and vertically -->
+<style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+</style>
+</body>
+</html>
