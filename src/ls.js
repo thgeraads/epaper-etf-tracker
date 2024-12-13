@@ -1,4 +1,4 @@
-const fetch = require('node-fetch-commonjs');
+const fetch = require('node-fetch');
 const moment = require('moment-timezone');
 
 class LsClient {
