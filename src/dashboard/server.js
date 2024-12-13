@@ -42,12 +42,31 @@ app.post('/findInstrument', async (req, res) => {
     });
 });
 
-app.post('/etfs/:id', (req, res) => {
+app.post('/etf', (req, res) => {
+    if (!req.body.instrumentId || !req.body.name || !req.body.shortname || !req.body.quantity || !req.body.boughtAt) {
+        return res.status(400).send('Missing required fields');
+    }
+
+    const quantity = parseFloat(req.body.quantity);
+    if (!quantity || quantity <= 0) {
+        return res.status(400).send('Invalid quantity value');
+    }
+    const boughtAt = parseFloat(req.body.boughtAt);
+    if (!boughtAt || boughtAt <= 0) {
+        return res.status(400).send('Invalid boughtAt value');
+    }
+
     const etfsJson = require(etfPath);
-    etfsJson[req.params.id] = req.body;
+
+    etfsJson[req.body.instrumentId] = {
+        name: req.body.name,
+        shortName: req.body.shortname,
+        holdings: quantity,
+        boughtAt: boughtAt
+    };
 
     fs.writeFileSync(etfPath, JSON.stringify(etfsJson, null, 2));
-    res.send({success: true});
+    res.redirect('/');
 });
 
 app.patch('/etfs/:id', (req, res) => {
