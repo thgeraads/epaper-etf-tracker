@@ -18,7 +18,6 @@
     "fs": "^0.0.1-security",
     "moment-timezone": "^0.5.46",
     "node-fetch": "^2.7.0",
-    "node-fetch-commonjs": "^3.3.2",
     "path": "^0.12.7",
     "sharp": "^0.33.5",
     "yahoo-finance2": "^2.13.2"
