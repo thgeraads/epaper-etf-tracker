@@ -69,12 +69,28 @@ app.post('/etf', (req, res) => {
     res.redirect('/');
 });
 
-app.patch('/etfs/:id', (req, res) => {
+app.post('/etf/:id/edit', (req, res) => {
+    if (!req.body.shortname || !req.body.quantity || !req.body.boughtAt) {
+        return res.status(400).send('Missing required fields');
+    }
+
+    const quantity = parseFloat(req.body.quantity);
+    if (!quantity || quantity <= 0) {
+        return res.status(400).send('Invalid quantity value');
+    }
+    const boughtAt = parseFloat(req.body.boughtAt);
+    if (!boughtAt || boughtAt <= 0) {
+        return res.status(400).send('Invalid boughtAt value');
+    }
+
     const etfsJson = require(etfPath);
-    etfsJson[req.params.id] = {...etfsJson[req.params.id], ...req.body};
+
+    etfsJson[req.params.id].shortName = req.body.shortname;
+    etfsJson[req.params.id].holdings = quantity;
+    etfsJson[req.params.id].boughtAt = boughtAt;
 
     fs.writeFileSync(etfPath, JSON.stringify(etfsJson, null, 2));
-    res.send({success: true});
+    res.redirect('/');
 });
 
 app.delete('/etfs/:id', (req, res) => {
