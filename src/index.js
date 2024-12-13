@@ -1,5 +1,5 @@
 const LsClient = require('./ls.js');
-const path = require('path');
+const path = require('node:path');
 const fs = require('fs');
 const {generateChartImage} = require('./image(400x300)(full).js');
 const {spawn} = require('child_process');
