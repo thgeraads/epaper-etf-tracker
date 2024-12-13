@@ -93,12 +93,12 @@ app.post('/etf/:id/edit', (req, res) => {
     res.redirect('/');
 });
 
-app.delete('/etfs/:id', (req, res) => {
+app.post('/etf/:id/delete', (req, res) => {
     const etfsJson = require(etfPath);
     delete etfsJson[req.params.id];
 
     fs.writeFileSync(etfPath, JSON.stringify(etfsJson, null, 2));
-    res.send({success: true});
+    res.redirect('/');
 });
 
 app.listen(port, () => {

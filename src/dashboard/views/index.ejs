@@ -25,8 +25,7 @@
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal-<%= id %>">Edit</button>
-                                <form action="/delete" method="POST" class="d-inline">
-                                    <input type="hidden" name="index" value="<%= id %>">
+                                <form action="/etf/<%= id %>/delete" method="POST" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             </div>
