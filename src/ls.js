@@ -61,11 +61,12 @@ class LsClient {
     }
 
     interpolateMissingData(data, ids) {
-        // Iterate through all the ids to ensure each timestamp has values for all ids
+        const times = Object.keys(data).sort(); // Sort timestamps
+
         for (const id of ids) {
             let previousValue = null; // To hold the last known value
             let previousTime = null; // To hold the last known timestamp
-            const times = Object.keys(data).sort(); // Sort timestamps
+            let isFirstDataPointHandled = false; // Flag to check if the first data point is handled
 
             for (let i = 0; i < times.length; i++) {
                 const time = times[i];
@@ -73,8 +74,20 @@ class LsClient {
                     // Current value exists, set it as the new previous reference
                     previousValue = data[time][id];
                     previousTime = time;
+                    isFirstDataPointHandled = true; // First data point has been handled
+                } else if (!isFirstDataPointHandled) {
+                    // Handle the first missing data point
+                    for (let j = i; j < times.length; j++) {
+                        if (data[times[j]][id] !== undefined) {
+                            data[time][id] = data[times[j]][id]; // Copy the next valid value
+                            previousValue = data[time][id]; // Update previousValue
+                            previousTime = time; // Update previousTime
+                            isFirstDataPointHandled = true; // Mark that the first data point is handled
+                            break;
+                        }
+                    }
                 } else if (previousValue !== null) {
-                    // Find the next valid value for interpolation
+                    // Previous value exists, find the next value to interpolate
                     let nextValue = null;
                     let nextTime = null;
 
@@ -103,6 +116,7 @@ class LsClient {
 
         return data;
     }
+
 
     calculateHoldings(data, etfs) {
         // Calculate the holdings for each timestamp
