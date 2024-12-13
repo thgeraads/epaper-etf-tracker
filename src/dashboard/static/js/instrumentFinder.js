@@ -20,6 +20,10 @@ document.getElementById('findInstrumentBtn').addEventListener('click', async () 
 
         const data = await response.json();
 
+        if (!data.success) {
+            throw new Error(data.error);
+        }
+
         // Populate fields with response data
         document.getElementById('instrumentId').value = data.etf.instrumentId;
         document.getElementById('shortname').value = data.etf.displayname;
