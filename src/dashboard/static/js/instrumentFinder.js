@@ -26,7 +26,7 @@ document.getElementById('findInstrumentBtn').addEventListener('click', async () 
         document.getElementById('name').value = data.etf.displayname;
 
         // Close the modal
-        const findInstrumentModal = new bootstrap.Modal(document.getElementById('findInstrumentModal'));
+        const findInstrumentModal = bootstrap.Modal.getInstance(document.getElementById('findInstrumentModal'));
         findInstrumentModal.hide();
 
     } catch (error) {
